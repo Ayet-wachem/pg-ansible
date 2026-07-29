@@ -1,0 +1,32 @@
+---
+- name: Installer PostgreSQL (RHEL/Alma)
+  include_tasks: install-redhat.yml
+  when: ansible_os_family == "RedHat"
+
+- name: Installer PostgreSQL (Ubuntu/Debian)
+  include_tasks: install-debian.yml
+  when: ansible_os_family == "Debian"
+
+- name: Configurer postgresql (conf.d sur Debian, direct sur RedHat)
+  template:
+    src: postgresql.conf.j2
+    dest: "{{ pg_conf_file }}"
+    owner: postgres
+    group: postgres
+    mode: "0600"
+  notify: restart postgresql
+
+- name: Configurer pg_hba.conf
+  template:
+    src: pg_hba.conf.j2
+    dest: "{{ pg_hba_file }}"
+    owner: postgres
+    group: postgres
+    mode: "0600"
+  notify: restart postgresql
+
+- name: Demarrer et activer le service
+  service:
+    name: "{{ pg_service }}"
+    state: started
+    enabled: true

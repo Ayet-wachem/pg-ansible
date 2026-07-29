@@ -1,0 +1,22 @@
+---
+- name: Ajouter le depot PGDG
+  dnf:
+    name: "https://download.postgresql.org/pub/repos/yum/reporpms/EL-9-x86_64/pgdg-redhat-repo-latest.noarch.rpm"
+    state: present
+    disable_gpg_check: true
+
+- name: Desactiver le module postgresql natif
+  command: dnf -qy module disable postgresql
+  changed_when: false
+
+- name: Installer PostgreSQL {{ pg_version }}
+  dnf:
+    name:
+      - "postgresql{{ pg_version }}-server"
+      - "postgresql{{ pg_version }}-contrib"
+    state: present
+
+- name: Initialiser le cluster (initdb)
+  command: "/usr/pgsql-{{ pg_version }}/bin/postgresql-{{ pg_version }}-setup initdb"
+  args:
+    creates: "{{ pg_data }}/PG_VERSION"

@@ -1,0 +1,6 @@
+---
+- name: Deploiement PostgreSQL standalone
+  hosts: standalone
+  become: true
+  roles:
+    - postgresql

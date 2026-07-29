@@ -1,0 +1,14 @@
+---
+pg_data: >-
+  {{ '/var/lib/pgsql/' ~ pg_version ~ '/data'
+     if ansible_os_family == 'RedHat'
+     else '/etc/postgresql/' ~ pg_version ~ '/main' }}
+pg_service: >-
+  {{ 'postgresql-' ~ pg_version
+     if ansible_os_family == 'RedHat'
+     else 'postgresql@' ~ pg_version ~ '-main' }}
+pg_conf_file: >-
+  {{ pg_data ~ '/postgresql.conf'
+     if ansible_os_family == 'RedHat'
+     else '/etc/postgresql/' ~ pg_version ~ '/main/conf.d/99-custom.conf' }}
+pg_hba_file: "{{ pg_data }}/pg_hba.conf"
