@@ -1,0 +1,23 @@
+---
+pg_bindir: >-
+  {{ '/usr/pgsql-' ~ pg_version ~ '/bin'
+     if ansible_os_family == 'RedHat'
+     else '/usr/lib/postgresql/' ~ pg_version ~ '/bin' }}
+pg_data: >-
+  {{ '/var/lib/pgsql/' ~ pg_version ~ '/data'
+     if ansible_os_family == 'RedHat'
+     else '/var/lib/postgresql/' ~ pg_version ~ '/main' }}
+pg_service: >-
+  {{ 'postgresql-' ~ pg_version
+     if ansible_os_family == 'RedHat'
+     else 'postgresql@' ~ pg_version ~ '-main' }}
+repmgr_conf: >-
+  {{ '/etc/repmgr/' ~ pg_version ~ '/repmgr.conf'
+     if ansible_os_family == 'RedHat'
+     else '/etc/postgresql/' ~ pg_version ~ '/main/repmgr.conf' }}
+node_id: "{{ '1' if inventory_hostname in groups['primary'] else '2' }}"
+master_ip: "{{ '172.16.50.180' if 'alma' in inventory_hostname else '172.16.50.185' }}"
+pg_conf_extra: >-
+  {{ pg_data ~ '/postgresql.conf'
+     if ansible_os_family == 'RedHat'
+     else '/etc/postgresql/' ~ pg_version ~ '/main/conf.d/99-custom.conf' }}

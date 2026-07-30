@@ -1,0 +1,8 @@
+---
+- name: Configurer le master (primary)
+  include_tasks: configure-master.yml
+  when: inventory_hostname in groups['primary']
+
+- name: Cloner le standby (slave)
+  include_tasks: clone-standby.yml
+  when: inventory_hostname in groups['standby']

@@ -1,0 +1,6 @@
+---
+- name: Installer PostgreSQL sur les noeuds HA
+  hosts: ha_alma:ha_ubuntu
+  become: true
+  roles:
+    - postgresql

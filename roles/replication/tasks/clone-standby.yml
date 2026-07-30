@@ -1,0 +1,44 @@
+---
+- name: Determiner l'IP du master du meme cluster
+  set_fact:
+    master_ip: "{{ '172.16.50.180' if 'alma' in inventory_hostname else '172.16.50.185' }}"
+
+- name: Arreter PostgreSQL sur le standby
+  service:
+    name: "{{ pg_service }}"
+    state: stopped
+
+- name: Vider le repertoire de donnees du standby
+  file:
+    path: "{{ pg_data }}"
+    state: absent
+
+- name: Recreer le repertoire de donnees vide
+  file:
+    path: "{{ pg_data }}"
+    state: directory
+    owner: postgres
+    group: postgres
+    mode: "0700"
+
+- name: Creer le fichier .pgpass pour repl
+  become_user: postgres
+  copy:
+    dest: "~postgres/.pgpass"
+    content: "{{ master_ip }}:{{ pg_port }}:replication:repl:{{ pg_repl_password }}\n"
+    mode: "0600"
+
+- name: Cloner les donnees depuis le master (pg_basebackup)
+  become_user: postgres
+  command: >
+    {{ pg_bindir }}/pg_basebackup
+    -h {{ master_ip }} -p {{ pg_port }}
+    -U repl -D {{ pg_data }}
+    -Fp -Xs -P -R
+  args:
+    creates: "{{ pg_data }}/PG_VERSION"
+
+- name: Demarrer PostgreSQL sur le standby
+  service:
+    name: "{{ pg_service }}"
+    state: started

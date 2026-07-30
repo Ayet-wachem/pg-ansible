@@ -1,0 +1,6 @@
+---
+- name: Configurer la replication
+  hosts: ha_alma:ha_ubuntu
+  become: true
+  roles:
+    - replication

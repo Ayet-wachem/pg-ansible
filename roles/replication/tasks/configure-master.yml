@@ -1,0 +1,20 @@
+---
+- name: Creer l'utilisateur de replication repl
+  become_user: postgres
+  community.postgresql.postgresql_user:
+    name: repl
+    password: "{{ pg_repl_password }}"
+    role_attr_flags: REPLICATION,LOGIN
+
+- name: Creer l'utilisateur repmgr
+  become_user: postgres
+  community.postgresql.postgresql_user:
+    name: repmgr
+    password: "{{ pg_repmgr_password }}"
+    role_attr_flags: SUPERUSER,LOGIN
+
+- name: Creer la base repmgr
+  become_user: postgres
+  community.postgresql.postgresql_db:
+    name: repmgr
+    owner: repmgr

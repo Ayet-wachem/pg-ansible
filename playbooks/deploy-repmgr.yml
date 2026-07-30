@@ -1,0 +1,6 @@
+---
+- name: Configurer repmgr
+  hosts: ha_alma:ha_ubuntu
+  become: true
+  roles:
+    - repmgr

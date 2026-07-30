@@ -1,0 +1,45 @@
+---
+- name: Installer repmgr (RedHat)
+  dnf:
+    name: "repmgr_{{ pg_version }}"
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: Installer repmgr (Debian)
+  apt:
+    name: "postgresql-{{ pg_version }}-repmgr"
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Activer shared_preload_libraries repmgr
+  lineinfile:
+    path: "{{ pg_conf_extra }}"
+    line: "shared_preload_libraries = 'repmgr'"
+    create: true
+    owner: postgres
+    group: postgres
+    mode: "0640"
+  notify: restart postgresql
+
+- name: Deployer repmgr.conf
+  template:
+    src: repmgr.conf.j2
+    dest: "{{ repmgr_conf }}"
+    owner: postgres
+    group: postgres
+    mode: "0640"
+
+- name: Redemarrer PostgreSQL pour charger repmgr
+  service:
+    name: "{{ pg_service }}"
+    state: restarted
+
+- name: Enregistrer le primary
+  become_user: postgres
+  command: "{{ pg_bindir }}/repmgr -f {{ repmgr_conf }} primary register --force"
+  when: inventory_hostname in groups['primary']
+
+- name: Enregistrer le standby
+  become_user: postgres
+  command: "{{ pg_bindir }}/repmgr -f {{ repmgr_conf }} standby register --force"
+  when: inventory_hostname in groups['standby']
