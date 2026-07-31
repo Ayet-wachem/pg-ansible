@@ -1,0 +1,15 @@
+---
+- name: Determiner le repertoire home de postgres
+  set_fact:
+    pg_home: >-
+      {{ '/var/lib/pgsql'
+         if ansible_os_family == 'RedHat'
+         else '/var/lib/postgresql' }}
+
+- name: Deployer le fichier .pgpass pour postgres
+  template:
+    src: pgpass.j2
+    dest: "{{ pg_home }}/.pgpass"
+    owner: postgres
+    group: postgres
+    mode: "0600"

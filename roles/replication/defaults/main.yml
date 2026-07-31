@@ -11,4 +11,5 @@ pg_service: >-
   {{ 'postgresql-' ~ pg_version
      if ansible_os_family == 'RedHat'
      else 'postgresql@' ~ pg_version ~ '-main' }}
-
+master_ip: "{{ '172.16.50.180' if 'alma' in inventory_hostname else '172.16.50.185' }}"
+pg_home_dir: "{{ '/var/lib/pgsql' if ansible_os_family == 'RedHat' else '/var/lib/postgresql' }}"

@@ -10,3 +10,5 @@ priority={{ 100 if inventory_hostname in groups['primary'] else 90 }}
 monitoring_history=yes
 reconnect_attempts=3
 reconnect_interval=5
+connection_check_type='connection'
+primary_visibility_consensus=false

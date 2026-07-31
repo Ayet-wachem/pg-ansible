@@ -1,4 +1,7 @@
 ---
+- name: Deployer le fichier .pgpass sur tous les noeuds HA
+  include_tasks: pgpass.yml
+
 - name: Configurer le master (primary)
   include_tasks: configure-master.yml
   when: inventory_hostname in groups['primary']
