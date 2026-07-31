@@ -21,3 +21,7 @@ pg_conf_extra: >-
   {{ pg_data ~ '/postgresql.conf'
      if ansible_os_family == 'RedHat'
      else '/etc/postgresql/' ~ pg_version ~ '/main/conf.d/99-custom.conf' }}
+repmgrd_service: >-
+  {{ 'repmgr-' ~ pg_version
+     if ansible_os_family == 'RedHat'
+     else 'repmgrd' }}

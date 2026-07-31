@@ -43,13 +43,15 @@
   become_user: postgres
   command: "{{ pg_bindir }}/repmgr -f {{ repmgr_conf }} standby register --force"
   when: inventory_hostname in groups['standby']
-- name: Activer et demarrer repmgrd (failover automatique)
-  service:
-    name: "repmgr-{{ pg_version }}"
-    state: started
-    enabled: true
-- name: Activer et demarrer repmgrd (failover automatique)
-  service:
-    name: "repmgr-{{ pg_version }}"
-    state: started
-    enabled: true
+
+- name: Activer repmgrd dans /etc/default (Debian)
+  copy:
+    dest: /etc/default/repmgrd
+    content: |
+      REPMGRD_ENABLED=yes
+      REPMGRD_CONF="/etc/postgresql/{{ pg_version }}/main/repmgr.conf"
+      REPMGRD_OPTS="--daemonize=false"
+    owner: root
+    group: root
+    mode: "0644"
+  when: ansible_os_family == "Debian"
