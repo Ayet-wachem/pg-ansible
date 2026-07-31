@@ -4,8 +4,8 @@ conninfo='host={{ ansible_host }} user=repmgr dbname=repmgr password={{ pg_repmg
 data_directory='{{ pg_data }}'
 pg_bindir='{{ pg_bindir }}'
 failover=automatic
-promote_command='repmgr standby promote -f {{ repmgr_conf }} --log-to-file'
-follow_command='repmgr standby follow -f {{ repmgr_conf }} --log-to-file --upstream-node-id=%n'
+promote_command='{{ pg_bindir }}/repmgr standby promote -f {{ repmgr_conf }} --log-to-file'
+follow_command='{{ pg_bindir }}/repmgr standby follow -f {{ repmgr_conf }} --log-to-file --upstream-node-id=%n'
 priority={{ 100 if inventory_hostname in groups['primary'] else 90 }}
 monitoring_history=yes
 reconnect_attempts=3
