@@ -1,0 +1,7 @@
+---
+- name: Configurer Keepalived (VIP)
+  hosts: ha_alma:ha_ubuntu
+  become: true
+  roles:
+    - keepalived
+

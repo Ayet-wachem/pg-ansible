@@ -1,0 +1,8 @@
+#!/bin/bash
+# Retourne 0 si ce noeud est PRIMARY PostgreSQL (garde la VIP), 1 sinon
+RESULT=$(sudo -u postgres {{ pg_bindir }}/psql -tAc "SELECT pg_is_in_recovery();" 2>/dev/null)
+if [ "$RESULT" = "f" ]; then
+  exit 0
+else
+  exit 1
+fi

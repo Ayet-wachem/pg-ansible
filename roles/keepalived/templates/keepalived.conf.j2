@@ -1,0 +1,37 @@
+vrrp_script check_pg {
+    script "/usr/local/bin/check_pg_primary.sh"
+    interval 2
+    weight 20
+    fall 2
+    rise 2
+}
+
+vrrp_instance PG_VIP {
+    state {{ keepalived_state }}
+    interface {{ keepalived_interface }}
+    virtual_router_id {{ vrrp_router_id }}
+    priority {{ keepalived_priority }}
+    advert_int 1
+
+    unicast_src_ip {{ ansible_host }}
+    unicast_peer {
+{% for h in (groups['ha_alma'] if 'alma' in inventory_hostname else groups['ha_ubuntu']) %}
+{% if h != inventory_hostname %}
+        {{ hostvars[h]['ansible_host'] }}
+{% endif %}
+{% endfor %}
+    }
+
+    authentication {
+        auth_type PASS
+        auth_pass {{ keepalived_auth_password[:8] }}
+    }
+
+    virtual_ipaddress {
+        {{ vip_address }}/24
+    }
+
+    track_script {
+        check_pg
+    }
+}

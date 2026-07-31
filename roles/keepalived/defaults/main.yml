@@ -1,0 +1,9 @@
+---
+pg_bindir: >-
+  {{ '/usr/pgsql-' ~ pg_version ~ '/bin'
+     if ansible_os_family == 'RedHat'
+     else '/usr/lib/postgresql/' ~ pg_version ~ '/bin' }}
+keepalived_state: "{{ 'MASTER' if inventory_hostname in groups['primary'] else 'BACKUP' }}"
+keepalived_priority: "{{ '100' if inventory_hostname in groups['primary'] else '99' }}"
+keepalived_interface: enp0s8
+vrrp_router_id: 51

@@ -1,0 +1,43 @@
+---
+- name: Installer keepalived (RedHat)
+  dnf:
+    name: keepalived
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: Installer keepalived (Debian)
+  apt:
+    name: keepalived
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Deployer le script check_pg_primary
+  template:
+    src: check_pg_primary.sh.j2
+    dest: /usr/local/bin/check_pg_primary.sh
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Deployer keepalived.conf
+  template:
+    src: keepalived.conf.j2
+    dest: /etc/keepalived/keepalived.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: restart keepalived
+
+- name: Autoriser VRRP dans le firewall (RedHat)
+  firewalld:
+    rich_rule: 'rule protocol value="vrrp" accept'
+    permanent: true
+    immediate: true
+    state: enabled
+  when: ansible_os_family == "RedHat"
+
+- name: Demarrer et activer keepalived
+  service:
+    name: keepalived
+    state: started
+    enabled: true
