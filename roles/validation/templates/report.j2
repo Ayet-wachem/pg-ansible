@@ -1,0 +1,25 @@
+=======================================================
+  RAPPORT DE VALIDATION - {{ inventory_hostname }}
+  Genere le : {{ ansible_date_time.iso8601 }}
+=======================================================
+Noeud            : {{ inventory_hostname }} ({{ ansible_host }})
+OS               : {{ ansible_distribution }} {{ ansible_distribution_version }}
+Architecture     : {{ pg_architecture }}
+Version PG cible  : {{ pg_version }}
+-------------------------------------------------------
+Service PG       : {{ pg_active.stdout }}
+Connexion SQL    : {{ 'OK' if pg_conn.stdout == '1' else 'ECHEC' }}
+Mode du noeud    : {{ 'PRIMARY (lecture/ecriture)' if pg_recovery.stdout == 'f' else 'STANDBY (recovery)' }}
+{% if pg_architecture == 'ha' and pg_recovery.stdout == 'f' %}
+Replication      : {{ pg_repl.stdout }} standby(s) connecte(s)
+{% endif %}
+{% if pg_architecture == 'ha' %}
+VIP {{ vip_address }} : {{ vip_check.stdout }}
+{% endif %}
+-------------------------------------------------------
+{% if pg_architecture == 'ha' %}
+Cluster repmgr :
+{{ repmgr_show.stdout }}
+{% endif %}
+=======================================================
+</jinja>

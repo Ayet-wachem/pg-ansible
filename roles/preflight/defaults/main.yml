@@ -1,0 +1,9 @@
+---
+preflight_min_disk_gb: 10
+preflight_min_ram_mb: 1500
+preflight_supported_os:
+  - AlmaLinux
+  - Rocky
+  - RedHat
+  - Ubuntu
+  - Debian

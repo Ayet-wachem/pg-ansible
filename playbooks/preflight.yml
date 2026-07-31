@@ -1,0 +1,6 @@
+---
+- name: Verifications pre-deploiement
+  hosts: all
+  become: true
+  roles:
+    - preflight

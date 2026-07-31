@@ -1,0 +1,10 @@
+---
+pg_bindir: >-
+  {{ '/usr/pgsql-' ~ pg_version ~ '/bin'
+     if ansible_os_family == 'RedHat'
+     else '/usr/lib/postgresql/' ~ pg_version ~ '/bin' }}
+pg_service: >-
+  {{ 'postgresql-' ~ pg_version
+     if ansible_os_family == 'RedHat'
+     else 'postgresql@' ~ pg_version ~ '-main' }}
+validation_report_path: /var/log/pg-validation-report.txt

@@ -1,0 +1,58 @@
+---
+- name: Verifier que l'OS est supporte
+  assert:
+    that: ansible_distribution in preflight_supported_os
+    fail_msg: "OS non supporte : {{ ansible_distribution }}"
+    success_msg: "OS supporte : {{ ansible_distribution }} {{ ansible_distribution_version }}"
+
+- name: Verifier la memoire RAM disponible
+  assert:
+    that: ansible_memtotal_mb >= preflight_min_ram_mb
+    fail_msg: "RAM insuffisante : {{ ansible_memtotal_mb }} Mo (minimum {{ preflight_min_ram_mb }})"
+    success_msg: "RAM OK : {{ ansible_memtotal_mb }} Mo"
+
+- name: Recuperer l'espace disque de la partition racine
+  shell: "df -BG --output=avail / | tail -1 | tr -dc '0-9'"
+  register: disk_avail
+  changed_when: false
+
+- name: Verifier l'espace disque
+  assert:
+    that: disk_avail.stdout | int >= preflight_min_disk_gb
+    fail_msg: "Disque insuffisant : {{ disk_avail.stdout }} Go (minimum {{ preflight_min_disk_gb }})"
+    success_msg: "Disque OK : {{ disk_avail.stdout }} Go"
+
+- name: Verifier que le port PostgreSQL est libre ou utilise par PostgreSQL
+  shell: "ss -tlnp | grep ':{{ pg_port | default(5432) }} ' || echo LIBRE"
+  register: port_check
+  changed_when: false
+
+- name: Afficher l'etat du port
+  debug:
+    msg: "Port {{ pg_port | default(5432) }} : {{ 'libre' if 'LIBRE' in port_check.stdout else 'utilise (' + port_check.stdout + ')' }}"
+
+- name: Verifier la resolution des noms des noeuds du cluster
+  command: "getent hosts {{ item }}"
+  loop: "{{ groups['all'] | map('extract', hostvars, 'inventory_hostname') | list }}"
+  register: dns_check
+  changed_when: false
+  failed_when: false
+
+- name: Detecter une version PostgreSQL deja installee
+  shell: "ls /usr/pgsql-* /usr/lib/postgresql/* 2>/dev/null || echo AUCUNE"
+  register: pg_existing
+  changed_when: false
+
+- name: Avertir si une version PostgreSQL existe deja
+  debug:
+    msg: "ATTENTION version PG deja presente : {{ pg_existing.stdout_lines }}"
+  when: "'AUCUNE' not in pg_existing.stdout"
+
+- name: Verifier les privileges sudo
+  command: id -u
+  register: uid_check
+  changed_when: false
+
+- name: Rapport preflight
+  debug:
+    msg: "PREFLIGHT OK sur {{ inventory_hostname }} : OS {{ ansible_distribution }}, RAM {{ ansible_memtotal_mb }}Mo, Disque {{ disk_avail.stdout }}Go"

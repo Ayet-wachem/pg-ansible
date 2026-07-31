@@ -1,0 +1,59 @@
+---
+- name: Verifier que le service PostgreSQL est actif
+  command: "systemctl is-active {{ pg_service }}"
+  register: pg_active
+  changed_when: false
+  failed_when: false
+
+- name: Verifier la connexion PostgreSQL
+  become_user: postgres
+  command: "{{ pg_bindir }}/psql -tAc 'SELECT 1;'"
+  register: pg_conn
+  changed_when: false
+  failed_when: false
+
+- name: Determiner le mode du noeud (primary/standby)
+  become_user: postgres
+  command: "{{ pg_bindir }}/psql -tAc 'SELECT pg_is_in_recovery();'"
+  register: pg_recovery
+  changed_when: false
+  failed_when: false
+
+- name: Verifier la replication (sur le primary)
+  become_user: postgres
+  command: "{{ pg_bindir }}/psql -tAc 'SELECT count(*) FROM pg_stat_replication;'"
+  register: pg_repl
+  changed_when: false
+  failed_when: false
+  when: pg_recovery.stdout == "f"
+
+- name: Verifier l'etat du cluster repmgr
+  become_user: postgres
+  command: "{{ pg_bindir }}/repmgr -f {{ repmgr_conf | default('/etc/repmgr/' ~ pg_version ~ '/repmgr.conf') }} cluster show"
+  register: repmgr_show
+  changed_when: false
+  failed_when: false
+  when: pg_architecture == "ha"
+
+- name: Tester l'acces a la VIP (sur cluster HA)
+  shell: "timeout 3 bash -c '</dev/tcp/{{ vip_address }}/{{ pg_port }}' && echo OUVERT || echo FERME"
+  register: vip_check
+  changed_when: false
+  failed_when: false
+  when: pg_architecture == "ha"
+
+- name: Generer le rapport de validation
+  template:
+    src: report.j2
+    dest: "{{ validation_report_path }}"
+    mode: "0644"
+
+- name: Afficher le bilan de validation
+  debug:
+    msg: >-
+      VALIDATION {{ inventory_hostname }} :
+      service={{ pg_active.stdout }},
+      connexion={{ 'OK' if pg_conn.stdout == '1' else 'ECHEC' }},
+      mode={{ 'primary' if pg_recovery.stdout == 'f' else 'standby' }}
+      {% if pg_architecture == 'ha' and pg_recovery.stdout == 'f' %}, replication={{ pg_repl.stdout }} standby{% endif %}
+      {% if pg_architecture == 'ha' %}, VIP={{ vip_check.stdout }}{% endif %}

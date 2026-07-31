@@ -1,0 +1,7 @@
+---
+- name: Validation post-deploiement
+  hosts: all
+  become: true
+  gather_facts: true
+  roles:
+    - validation
