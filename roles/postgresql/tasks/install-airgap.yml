@@ -1,0 +1,22 @@
+---
+- name: Configurer le depot local air-gapped
+  yum_repository:
+    name: pg-airgap
+    description: "Depot local PostgreSQL air-gapped"
+    baseurl: "{{ pg_airgap_repo_url }}"
+    gpgcheck: false
+    enabled: true
+
+- name: Installer PostgreSQL depuis le depot local (sans Internet)
+  dnf:
+    name:
+      - "postgresql{{ pg_version }}-server"
+      - "postgresql{{ pg_version }}-contrib"
+    state: present
+    disablerepo: "*"
+    enablerepo: "pg-airgap"
+
+- name: Initialiser le cluster (initdb)
+  command: "/usr/pgsql-{{ pg_version }}/bin/postgresql-{{ pg_version }}-setup initdb"
+  args:
+    creates: "{{ pg_data }}/PG_VERSION"

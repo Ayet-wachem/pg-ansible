@@ -12,3 +12,5 @@ pg_conf_file: >-
      if ansible_os_family == 'RedHat'
      else '/etc/postgresql/' ~ pg_version ~ '/main/conf.d/99-custom.conf' }}
 pg_hba_file: "{{ pg_data }}/pg_hba.conf"
+pg_install_mode: online
+pg_airgap_repo_url: "http://172.16.50.180/pgrepo"	
