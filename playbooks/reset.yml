@@ -1,0 +1,67 @@
+---
+# Playbook de remise a zero : arrete les services, supprime les donnees
+# ATTENTION : destructif. A utiliser uniquement en environnement de test.
+
+- name: Remise a zero PostgreSQL / repmgr / keepalived
+  hosts: all
+  become: true
+  vars:
+    pg_service: >-
+      {{ 'postgresql-' ~ pg_version
+         if ansible_os_family == 'RedHat'
+         else 'postgresql@' ~ pg_version ~ '-main' }}
+    repmgrd_service: >-
+      {{ 'repmgr-' ~ pg_version
+         if ansible_os_family == 'RedHat'
+         else 'repmgrd' }}
+    repmgr_conf: >-
+      {{ '/etc/repmgr/' ~ pg_version ~ '/repmgr.conf'
+         if ansible_os_family == 'RedHat'
+         else '/etc/postgresql/' ~ pg_version ~ '/main/repmgr.conf' }}
+    pg_home_dir: "{{ '/var/lib/pgsql' if ansible_os_family == 'RedHat' else '/var/lib/postgresql' }}"
+  tasks:
+
+    - name: Arreter keepalived
+      service:
+        name: keepalived
+        state: stopped
+      failed_when: false
+
+    - name: Arreter repmgrd
+      service:
+        name: "{{ repmgrd_service }}"
+        state: stopped
+      failed_when: false
+
+    - name: Arreter PostgreSQL
+      service:
+        name: "{{ pg_service }}"
+        state: stopped
+      failed_when: false
+
+    - name: Supprimer le repertoire de donnees (RedHat)
+      file:
+        path: "/var/lib/pgsql/{{ pg_version }}/data"
+        state: absent
+      when: ansible_os_family == "RedHat"
+
+    - name: Supprimer le cluster (Debian)
+      command: "pg_dropcluster {{ pg_version }} main --stop"
+      failed_when: false
+      when: ansible_os_family == "Debian"
+
+    - name: Supprimer la configuration repmgr
+      file:
+        path: "{{ repmgr_conf }}"
+        state: absent
+      failed_when: false
+
+    - name: Supprimer le fichier .pgpass
+      file:
+        path: "{{ pg_home_dir }}/.pgpass"
+        state: absent
+      failed_when: false
+
+    - name: Rapport de remise a zero
+      debug:
+        msg: "Reset termine sur {{ inventory_hostname }}"

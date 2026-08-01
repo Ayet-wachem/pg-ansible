@@ -1,0 +1,44 @@
+---
+# Playbook maître : deploiement complet de bout en bout
+
+- name: Verifications prealables
+  hosts: all
+  become: true
+  roles:
+    - preflight
+
+- name: Installation PostgreSQL (standalone)
+  hosts: standalone
+  become: true
+  roles:
+    - postgresql
+
+- name: Installation PostgreSQL en mode HA
+  hosts: ha_alma:ha_ubuntu
+  become: true
+  roles:
+    - postgresql
+
+- name: Configuration de la replication
+  hosts: ha_alma:ha_ubuntu
+  become: true
+  roles:
+    - replication
+
+- name: Configuration de repmgr (failover automatique)
+  hosts: ha_alma:ha_ubuntu
+  become: true
+  roles:
+    - repmgr
+
+- name: Configuration de Keepalived (VIP)
+  hosts: ha_alma:ha_ubuntu
+  become: true
+  roles:
+    - keepalived
+
+- name: Validation post-deploiement
+  hosts: all
+  become: true
+  roles:
+    - validation
